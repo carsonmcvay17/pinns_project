@@ -1,0 +1,9 @@
+README.md
+setup.py
+troesch/__init__.py
+troesch/gen_data.py
+troesch/pinn_utils.py
+troesch.egg-info/PKG-INFO
+troesch.egg-info/SOURCES.txt
+troesch.egg-info/dependency_links.txt
+troesch.egg-info/top_level.txt
