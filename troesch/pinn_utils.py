@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
+from pathlib import Path
 
 class SimpleNN(nn.Module):
     def __init__(self, hidden_size=10, n_layers=3):
@@ -22,7 +23,8 @@ class SimpleNN(nn.Module):
         self.network = nn.Sequential(*layers)
         
     def forward(self, x):
-        return self.network(x)
+        n_out = self.network(x)
+        return x + x * (1-x) * n_out
     
 
 class PINN:
@@ -36,7 +38,7 @@ class PINN:
     def physics_loss(self, model, x_colloc):
         """
         Physics loss defined by
-        L=1\M \sum_j=1^M |F(y(x_j;theta);x_j)|^2
+        L=1/M /sum_j=1^M |F(y(x_j;theta);x_j)|^2
         where M is num training points and 
         F(y(x)) = y''(x)-lambda sinh(lambda y(x))
         """
@@ -63,11 +65,10 @@ class PINN:
         """
         Train PINN
         """
-        optimizer = optim.Adam(self.parameters(), lr=lr)
-        criterion = nn.MSELoss
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+        criterion = nn.MSELoss()
 
         # store loss history
-        data_losses = []
         physics_losses = []
         total_losses = []
 
@@ -83,14 +84,13 @@ class PINN:
             loss_physics = self.physics_loss(model, x_colloc)
 
             # total loss
-            total_loss = loss_data + lambda_physics * loss_physics
+            total_loss = lambda_physics * loss_physics
 
             # backprop
             total_loss.backward()
             optimizer.step()
 
             # store losses
-            data_losses.append(loss_data.item())
             physics_losses.append(loss_physics.item())
             total_losses.append(total_loss.item())
 
@@ -98,7 +98,21 @@ class PINN:
                 pbar.set_postfix({'Loss': f'{loss_data.item():.6f}', 
                               'Physics': f'{loss_physics.item():.6f}', 
                               'Total': f'{total_loss.item():.6f}'})
-            return data_losses, physics_losses, total_losses
+        return physics_losses, total_losses
+    
+    def get_project_path(self, path_str: str) -> Path:
+        """
+        Return path relative to root
+        """
+        SCRIPT_DIR = Path(__file__).resolve().parent
+        PROJECT_ROOT = SCRIPT_DIR
+        while PROJECT_ROOT.name != "pinns_project":
+            PROJECT_ROOT = PROJECT_ROOT.parent
+        
+        # remove leading slash if present
+        path_str = path_str.lstrip("/\\")
+        return PROJECT_ROOT / Path(path_str)
+
 
 
 
