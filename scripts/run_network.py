@@ -26,13 +26,14 @@ lambda_vals = [1, 3, 4, 5, 10]
 results = {}
 
 
-# Boundary data, imposing hard boundary conditions
+# Boundary data, imposing hard boundary conditions (not used anymore)
 x_data = torch.tensor([[0.0], [1.0]], dtype=torch.float32).to(device)
 y_data = torch.tensor([[0.0], [1.0]], dtype=torch.float32).to(device)
 
 # collocation points
 M = 50
-x_colloc = torch.rand((M, 1), dtype=torch.float32).to(device)
+
+x_colloc = torch.linspace(0, 1, M).reshape(-1, 1).to(device)
 x_test = torch.linspace(0, 1, 200).reshape(-1, 1).to(device)
 
 # loop over lambda_vals
